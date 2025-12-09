@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Roda da Vida Interativa</title>
+<style>
+    body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: auto; }
+    h1 { text-align: center; }
+    canvas { max-width: 100%; margin-top: 20px; }
+    .campo { margin-bottom: 10px; }
+    .hidden { display: none; }
+    button { padding: 10px 20px; margin-top: 15px; }
+</style>
+</head>
+<body>
+
+<h1>Roda da Vida Interativa</h1>
+
+<h3>Preencha sua avaliação</h3>
+
+<div id="formulario"></div>
+
+<hr>
+
+<h3>Baixar gráfico</h3>
+
+<div>
+    <label>Nome:</label><br>
+    <input id="nome" type="text" class="campo"><br>
+
+    <label>Email:</label><br>
+    <input id="email" type="email" class="campo"><br>
+
+    <button id="gerar" disabled>Gerar e Baixar</button>
+</div>
+
+<canvas id="grafico" width="600" height="600" class="hidden"></canvas>
+<pre id="respostas" class="hidden"></pre>
+
+<script>
+const categorias = [
+"Saúde e Disposição","Desenvolvimento Intelectual","Equilibrio Emocional",
+"Realização e Propósito","Recursos Financeiros","Contribuição social",
+"Família","Relacionamento Amoroso","Vida Social","Diversão e Hobbies",
+"Felicidade e Plenitude","Espiritualidade"
+];
+
+const form = document.getElementById("formulario");
+
+categorias.forEach(cat => {
+    form.innerHTML += `
+        <div>
+            <strong>${cat}</strong><br>
+            Nota (0 a 10): <input type="number" id="n_${cat}" min="0" max="10"><br>
+            Motivo: <br>
+            <textarea id="m_${cat}" rows="2" cols="40"></textarea><br><br>
+        </div>
+    `;
+});
+
+document.getElementById("nome").addEventListener("input", validar);
+document.getElementById("email").addEventListener("input", validar);
+
+function validar() {
+    const nome = document.getElementById("nome").value.trim();
+    const email = document.getElementById("email").value.trim();
+    document.getElementById("gerar").disabled = !(nome && email);
+}
+
+document.getElementById("gerar").addEventListener("click", gerarGrafico);
+
+function gerarGrafico() {
+    const notas = categorias.map(c => Number(document.getElementById("n_"+c).value || 0));
+    const motivos = categorias.map(c => document.getElementById("m_"+c).value || "");
+
+    const canvas = document.getElementById("grafico");
+    const ctx = canvas.getContext("2d");
+    canvas.classList.remove("hidden");
+
+    const cx = canvas.width/2;
+    const cy = canvas.height/2;
+    const raioMax = 250;
+    ctx.clearRect(0,0,600,600);
+
+    categorias.forEach((c, i) => {
+        const angInicio = (Math.PI * 2 / categorias.length) * i;
+        const angFim = (Math.PI * 2 / categorias.length) * (i+1);
+        const raio = (notas[i] / 10) * raioMax;
+
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.arc(cx, cy, raio, angInicio, angFim);
+        ctx.closePath();
+        ctx.fillStyle = "rgba(0,150,255,0.4)";
+        ctx.fill();
+        ctx.stroke();
+    });
+
+    let txt = "";
+    categorias.forEach((c, i) => {
+        txt += `${c} | Nota: ${notas[i]} | Motivo: ${motivos[i]}
+`;
+    });
+
+    const bloco = document.getElementById("respostas");
+    bloco.textContent = txt;
+    bloco.classList.remove("hidden");
+
+    const link = document.createElement("a");
+    link.download = "roda-da-vida.png";
+    link.href = canvas.toDataURL();
+    link.click();
+}
+</script>
+
+</body>
+</html>
